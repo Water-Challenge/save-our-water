@@ -6,7 +6,9 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Bitmap;
+
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,7 +18,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,6 +44,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Landing extends ActionBarActivity implements
         GoogleApiClient.ConnectionCallbacks,
@@ -53,7 +59,10 @@ public class Landing extends ActionBarActivity implements
     private LocationRequest mLocationRequest;
     private long UPDATE_INTERVAL = 60000;  /* 60 secs */
     private long FASTEST_INTERVAL = 5000; /* 5 secs */
+
     Bitmap imageBitmap;
+    private int mapHeight;
+    EditText mDescription;
 
     /*
 	 * Define a request code to send to Google Play services This code is
@@ -67,6 +76,7 @@ public class Landing extends ActionBarActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing);
+        mDescription   = (EditText)findViewById(R.id.etDescription);
         Button take_photo = (Button) findViewById(R.id.btTakePhoto);
         Button upload_photo = (Button) findViewById(R.id.btUploadPhoto);
         take_photo.setOnClickListener(new View.OnClickListener(){
@@ -78,6 +88,12 @@ public class Landing extends ActionBarActivity implements
         upload_photo.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 openGallery(UPLOAD_PHOTO);
+            }
+        });
+        Button report = (Button) findViewById(R.id.btReport);
+        report.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                report_email(UPLOAD_PHOTO);
             }
         });
 
@@ -93,8 +109,18 @@ public class Landing extends ActionBarActivity implements
         } else {
             Toast.makeText(this, "Error - Map Fragment was null!!", Toast.LENGTH_SHORT).show();
         }
+
+        final View vInvisible = findViewById(R.id.vInvisible);
+        ViewTreeObserver vto = vInvisible.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+              @Override
+              public void onGlobalLayout() {
+                  mapHeight = vInvisible.getHeight();
+              }
+        });
+
     }
-    
+
     private void setUpMap() {
         map.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
 
@@ -106,31 +132,22 @@ public class Landing extends ActionBarActivity implements
 
             // Defines the contents of the InfoWindow
             @Override
-            public View getInfoContents(Marker arg0) {
-
-                Log.d(TAG, "in getInfoContents");
-
+            public View getInfoContents(Marker marker) {
                 // Getting view from the layout file info_window_layout
                 View v = getLayoutInflater().inflate(R.layout.windowlayout, null);
 
-                // Getting the position from the marker
-                LatLng latLng = arg0.getPosition();
-
                 // Getting reference to the TextView to set latitude
-                TextView tvLat = (TextView) v.findViewById(R.id.tv_lat);
-
-                // Getting reference to the TextView to set longitude
-                TextView tvLng = (TextView) v.findViewById(R.id.tv_lng);
+                TextView tvLat = (TextView) v.findViewById(R.id.tvDescription);
 
                 // Setting the latitude
-                tvLat.setText("Latitude:" + latLng.latitude);
-
-                // Setting the longitude
-                tvLng.setText("Longitude:"+ latLng.longitude);
+                tvLat.setText(marker.getSnippet());
 
                 ImageView ivPhoto = (ImageView) v.findViewById(R.id.ivPhoto);
+                ivPhoto.setImageResource(photos.get(marker.getId()));
+
+                ImageView iv1Photo = (ImageView) v.findViewById(R.id.ivPhoto);
                 //ivPhoto.setImageResource(R.drawable.ic_leaky_pipe);
-                ivPhoto.setImageBitmap(imageBitmap);
+                iv1Photo.setImageBitmap(imageBitmap);
                 // Returning the view containing InfoWindow contents
                 return v;
 
@@ -140,10 +157,12 @@ public class Landing extends ActionBarActivity implements
         map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                Log.d(TAG, "in onMarkerClick");
-                // map.clear();
+
                 marker.showInfoWindow();
-                return false;
+                Point mapPoint = map.getProjection().toScreenLocation(marker.getPosition());
+                mapPoint.set(mapPoint.x, mapPoint.y - (mapHeight/3));
+                map.animateCamera(CameraUpdateFactory.newLatLng(map.getProjection().fromScreenLocation(mapPoint)), 300, null);
+                return true;
             }
         });
 /*
@@ -184,6 +203,15 @@ public class Landing extends ActionBarActivity implements
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent,"Select file to upload "), req_code);
+    }
+
+    public void report_email(int req_code){
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("plain/text");
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[] { "tpgandhe@gmail.com" });
+        intent.putExtra(Intent.EXTRA_SUBJECT, "WATER WASTAGE REPORT");
+        intent.putExtra(Intent.EXTRA_TEXT, mDescription.getText().toString());
+        startActivity(Intent.createChooser(intent, ""));
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -243,7 +271,7 @@ public class Landing extends ActionBarActivity implements
         map = googleMap;
         if (map != null) {
             // Map is ready
-            Toast.makeText(this, "Map Fragment was loaded properly!", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(this, "Map Fragment was loaded properly!", Toast.LENGTH_SHORT).show();
             map.setMyLocationEnabled(true);
 
             // Now that map has loaded, let's get our location!
@@ -325,7 +353,7 @@ public class Landing extends ActionBarActivity implements
         // Display the connection status
         Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (location != null) {
-            Toast.makeText(this, "GPS location was found!", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(this, "GPS location was found!", Toast.LENGTH_SHORT).show();
             LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17);
             map.animateCamera(cameraUpdate);
@@ -350,7 +378,7 @@ public class Landing extends ActionBarActivity implements
         String msg = "Updated Location: " +
                 Double.toString(location.getLatitude()) + "," +
                 Double.toString(location.getLongitude());
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+       // Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 
     }
 
@@ -435,9 +463,12 @@ public class Landing extends ActionBarActivity implements
         options.position(currentLatLng);
         Marker mapMarker = map.addMarker(options);
         mapMarker.setTitle("Test test test");
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng,
-                13));
+        mapMarker.setSnippet("Broken pipe leaking into street.");
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15));
+
+        photos.put("m0", R.mipmap.ic_broken_pipe);
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -460,4 +491,6 @@ public class Landing extends ActionBarActivity implements
 
         return super.onOptionsItemSelected(item);
     }
+
+    private static final Map<String, Integer> photos = new HashMap<>();
 }

@@ -6,18 +6,14 @@
 
     <ImageView
         android:id="@+id/ivPhoto"
-        android:layout_width="match_parent"
+        android:layout_width="90sp"
+        android:layout_height="90sp"
+        android:layout_gravity="center_horizontal"/>
+
+    <TextView
+        android:id="@+id/tvDescription"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@android:drawable/btn_star"/>
-
-    <TextView
-        android:id="@+id/tv_lat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <TextView
-        android:id="@+id/tv_lng"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:textStyle="bold"/>
 
 </LinearLayout>
