@@ -145,8 +145,8 @@ public class Landing extends ActionBarActivity implements
                     ivPhoto.setImageResource(photos.get(marker.getId()));
                 } else {
                     ivPhoto.setImageBitmap(imageBitmap);
-
                     tvLat.setText(mDescription.getText().toString());
+                    mDescription.setText("");
                 }
 
                 //ImageView iv1Photo = (ImageView) v.findViewById(R.id.ivPhoto);
@@ -212,7 +212,7 @@ public class Landing extends ActionBarActivity implements
     public void report_email(int req_code){
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("plain/text");
-        intent.putExtra(Intent.EXTRA_EMAIL, new String[] { "tpgandhe@gmail.com" });
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[] { "info@sfwater.org" });
         intent.putExtra(Intent.EXTRA_SUBJECT, "WATER WASTAGE REPORT");
         intent.putExtra(Intent.EXTRA_TEXT, mDescription.getText().toString());
         startActivity(Intent.createChooser(intent, ""));
