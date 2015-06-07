@@ -38,7 +38,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Landing extends ActionBarActivity implements
@@ -139,10 +141,12 @@ public class Landing extends ActionBarActivity implements
                 ImageView ivPhoto = (ImageView) v.findViewById(R.id.ivPhoto);
 
                 String id = marker.getId();
-                if (id.equals("m0") || id.equals("m1")) {
+                if (!id.equals("m2")) {
                     ivPhoto.setImageResource(photos.get(marker.getId()));
                 } else {
                     ivPhoto.setImageBitmap(imageBitmap);
+
+                    tvLat.setText(mDescription.getText().toString());
                 }
 
                 //ImageView iv1Photo = (ImageView) v.findViewById(R.id.ivPhoto);
@@ -225,6 +229,8 @@ public class Landing extends ActionBarActivity implements
                         Log.e("TANIA", "taken photo !!!"+ selectedImageUri);
                         Bundle extras = data.getExtras();
                         imageBitmap = (Bitmap) extras.get("data");
+                        markers.get(2).showInfoWindow();
+
                 }
 
             case UPLOAD_PHOTO:
@@ -449,9 +455,9 @@ public class Landing extends ActionBarActivity implements
     }
 
     private void addMarker() {
-        addMarker(37.7875, -122.397, "Broken pipe leaking into street.", "m0", R.mipmap.ic_broken_pipe);
+        addMarker(37.784, -122.41, "Broken pipe leaking into street.", "m0", R.mipmap.ic_broken_pipe);
         addMarker(37.79, -122.4, "Sinkhole in street.", "m1", R.drawable.ic_leaky_pipe);
-        addMarker(37.784, -122.38, "Demo.", "m2", 0);
+        addMarker(37.7875, -122.397, "Demo.", "m2", 0);
     }
 
     private void addMarker(double lat, double lng, String description, String id, int res) {
@@ -460,8 +466,9 @@ public class Landing extends ActionBarActivity implements
         options.position(currentLatLng);
         Marker mapMarker = map.addMarker(options);
         mapMarker.setSnippet(description);
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 14));
         photos.put(id, res);
+        markers.add(mapMarker);
     }
 
 
@@ -488,4 +495,5 @@ public class Landing extends ActionBarActivity implements
     }
 
     private static final Map<String, Integer> photos = new HashMap<>();
+    private static final List<Marker> markers = new ArrayList<>();
 }
