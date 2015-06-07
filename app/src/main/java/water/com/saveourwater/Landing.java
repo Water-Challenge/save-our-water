@@ -6,8 +6,6 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Bitmap;
-
-import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.location.Location;
 import android.net.Uri;
@@ -40,10 +38,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -143,11 +137,17 @@ public class Landing extends ActionBarActivity implements
                 tvLat.setText(marker.getSnippet());
 
                 ImageView ivPhoto = (ImageView) v.findViewById(R.id.ivPhoto);
-                ivPhoto.setImageResource(photos.get(marker.getId()));
 
-                ImageView iv1Photo = (ImageView) v.findViewById(R.id.ivPhoto);
-                //ivPhoto.setImageResource(R.drawable.ic_leaky_pipe);
-                iv1Photo.setImageBitmap(imageBitmap);
+                String id = marker.getId();
+                if (id.equals("m0") || id.equals("m1")) {
+                    ivPhoto.setImageResource(photos.get(marker.getId()));
+                } else {
+                    ivPhoto.setImageBitmap(imageBitmap);
+                }
+
+                //ImageView iv1Photo = (ImageView) v.findViewById(R.id.ivPhoto);
+
+                //iv1Photo.setImageBitmap(imageBitmap);
                 // Returning the view containing InfoWindow contents
                 return v;
 
@@ -160,7 +160,7 @@ public class Landing extends ActionBarActivity implements
 
                 marker.showInfoWindow();
                 Point mapPoint = map.getProjection().toScreenLocation(marker.getPosition());
-                mapPoint.set(mapPoint.x, mapPoint.y - (mapHeight/3));
+                mapPoint.set(mapPoint.x, mapPoint.y - (mapHeight / 3));
                 map.animateCamera(CameraUpdateFactory.newLatLng(map.getProjection().fromScreenLocation(mapPoint)), 300, null);
                 return true;
             }
@@ -449,24 +449,19 @@ public class Landing extends ActionBarActivity implements
     }
 
     private void addMarker() {
-        MarkerOptions options = new MarkerOptions();
-        // following four lines requires 'Google Maps Android API Utility Library'
-        // https://developers.google.com/maps/documentation/android/utility/
-        // I have used this to display the time as title for location markers
-        // you can safely comment the following four lines but for this info
-      /*  IconGenerator iconFactory = new IconGenerator(this);
-        iconFactory.setStyle(IconGenerator.STYLE_PURPLE);
-        options.icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(mLastUpdateTime)));
-        options.anchor(iconFactory.getAnchorU(), iconFactory.getAnchorV()); */
+        addMarker(37.7875, -122.397, "Broken pipe leaking into street.", "m0", R.mipmap.ic_broken_pipe);
+        addMarker(37.79, -122.4, "Sinkhole in street.", "m1", R.drawable.ic_leaky_pipe);
+        addMarker(37.784, -122.38, "Demo.", "m2", 0);
+    }
 
-        LatLng currentLatLng = new LatLng(37.7875, -122.397);
+    private void addMarker(double lat, double lng, String description, String id, int res) {
+        MarkerOptions options = new MarkerOptions();
+        LatLng currentLatLng = new LatLng(lat, lng);
         options.position(currentLatLng);
         Marker mapMarker = map.addMarker(options);
-        mapMarker.setTitle("Test test test");
-        mapMarker.setSnippet("Broken pipe leaking into street.");
+        mapMarker.setSnippet(description);
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15));
-
-        photos.put("m0", R.mipmap.ic_broken_pipe);
+        photos.put(id, res);
     }
 
 
