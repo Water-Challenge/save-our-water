@@ -1,25 +1,22 @@
 package water.com.saveourwater;
 
 
+import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.net.Uri;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Toast;
-
-import android.app.Activity;
-import android.app.Dialog;
-import android.content.IntentSender;
-import android.location.Location;
-import android.support.v4.app.DialogFragment;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -34,12 +31,15 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 public class Landing extends ActionBarActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
+    private static final String TAG = Landing.class.getSimpleName();
     private SupportMapFragment mapFragment;
     private GoogleMap map;
     private GoogleApiClient mGoogleApiClient;
@@ -79,11 +79,88 @@ public class Landing extends ActionBarActivity implements
                 @Override
                 public void onMapReady(GoogleMap map) {
                     loadMap(map);
+                    setUpMap();
                 }
             });
         } else {
             Toast.makeText(this, "Error - Map Fragment was null!!", Toast.LENGTH_SHORT).show();
         }
+    }
+    
+    private void setUpMap() {
+        map.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+
+            // Use default InfoWindow frame
+            @Override
+            public View getInfoWindow(Marker arg0) {
+                return null;
+            }
+
+            // Defines the contents of the InfoWindow
+            @Override
+            public View getInfoContents(Marker arg0) {
+
+                Log.d(TAG, "in getInfoContents");
+
+                // Getting view from the layout file info_window_layout
+                View v = getLayoutInflater().inflate(R.layout.windowlayout, null);
+
+                // Getting the position from the marker
+                LatLng latLng = arg0.getPosition();
+
+                // Getting reference to the TextView to set latitude
+                TextView tvLat = (TextView) v.findViewById(R.id.tv_lat);
+
+                // Getting reference to the TextView to set longitude
+                TextView tvLng = (TextView) v.findViewById(R.id.tv_lng);
+
+                // Setting the latitude
+                tvLat.setText("Latitude:" + latLng.latitude);
+
+                // Setting the longitude
+                tvLng.setText("Longitude:"+ latLng.longitude);
+
+                // Returning the view containing InfoWindow contents
+                return v;
+
+            }
+        });
+
+        map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                Log.d(TAG, "in onMarkerClick");
+               // map.clear();
+                marker.showInfoWindow();
+                return false;
+            }
+        });
+/*
+        // Adding and showing marker while touching the map
+        map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+
+            @Override
+            public void onMapClick(LatLng arg0) {
+                // Clears any existing markers from the map
+                map.clear();
+
+                // Creating an instance of MarkerOptions to set position
+                MarkerOptions markerOptions = new MarkerOptions();
+
+                // Setting position on the MarkerOptions
+                markerOptions.position(arg0);
+
+                // Animating to the currently touched position
+                map.animateCamera(CameraUpdateFactory.newLatLng(arg0));
+
+                // Adding marker on the map
+                Marker marker = map.addMarker(markerOptions);
+
+                // Showing InfoWindow on the map
+                marker.showInfoWindow();
+
+            }
+        }); */
     }
 
     public void takePhoto(int req_code){
@@ -223,6 +300,7 @@ public class Landing extends ActionBarActivity implements
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17);
             map.animateCamera(cameraUpdate);
             startLocationUpdates();
+            addMarker();
         } else {
             Toast.makeText(this, "Current location was null, enable GPS on emulator!", Toast.LENGTH_SHORT).show();
         }
@@ -310,6 +388,25 @@ public class Landing extends ActionBarActivity implements
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             return mDialog;
         }
+    }
+
+    private void addMarker() {
+        MarkerOptions options = new MarkerOptions();
+        // following four lines requires 'Google Maps Android API Utility Library'
+        // https://developers.google.com/maps/documentation/android/utility/
+        // I have used this to display the time as title for location markers
+        // you can safely comment the following four lines but for this info
+      /*  IconGenerator iconFactory = new IconGenerator(this);
+        iconFactory.setStyle(IconGenerator.STYLE_PURPLE);
+        options.icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(mLastUpdateTime)));
+        options.anchor(iconFactory.getAnchorU(), iconFactory.getAnchorV()); */
+
+        LatLng currentLatLng = new LatLng(37.7875, -122.397);
+        options.position(currentLatLng);
+        Marker mapMarker = map.addMarker(options);
+        mapMarker.setTitle("Test test test");
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng,
+                13));
     }
 
     @Override
