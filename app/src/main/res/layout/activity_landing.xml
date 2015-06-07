@@ -19,21 +19,27 @@
             android:background="@android:color/transparent" />
     </RelativeLayout>
 
-    <Button
-        android:id="@+id/btTakePhoto"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="10dp"
-        android:layout_weight="2"
-        android:text="@string/take_photo"/>
+        android:orientation="horizontal"
+        android:layout_weight="2">
+        <Button
+            android:id="@+id/btTakePhoto"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp"
+            android:text="@string/take_photo"
+            android:layout_weight="1"/>
 
-    <Button
-        android:id="@+id/btUploadPhoto"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="10dp"
-        android:layout_weight="2"
-        android:text="@string/upload_photo"/>
+        <Button
+            android:id="@+id/btUploadPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp"
+            android:text="@string/upload_photo"
+            android:layout_weight="1"/>
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tvDescription"
