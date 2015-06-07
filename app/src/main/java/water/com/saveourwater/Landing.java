@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,6 +36,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 public class Landing extends ActionBarActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -46,6 +53,7 @@ public class Landing extends ActionBarActivity implements
     private LocationRequest mLocationRequest;
     private long UPDATE_INTERVAL = 60000;  /* 60 secs */
     private long FASTEST_INTERVAL = 5000; /* 5 secs */
+    Bitmap imageBitmap;
 
     /*
 	 * Define a request code to send to Google Play services This code is
@@ -120,6 +128,9 @@ public class Landing extends ActionBarActivity implements
                 // Setting the longitude
                 tvLng.setText("Longitude:"+ latLng.longitude);
 
+                ImageView ivPhoto = (ImageView) v.findViewById(R.id.ivPhoto);
+                //ivPhoto.setImageResource(R.drawable.ic_leaky_pipe);
+                ivPhoto.setImageBitmap(imageBitmap);
                 // Returning the view containing InfoWindow contents
                 return v;
 
@@ -130,7 +141,7 @@ public class Landing extends ActionBarActivity implements
             @Override
             public boolean onMarkerClick(Marker marker) {
                 Log.d(TAG, "in onMarkerClick");
-               // map.clear();
+                // map.clear();
                 marker.showInfoWindow();
                 return false;
             }
@@ -185,15 +196,16 @@ public class Landing extends ActionBarActivity implements
                         Uri selectedImageUri = data.getData();
                         Log.e("TANIA", "taken photo !!!"+ selectedImageUri);
                         Bundle extras = data.getExtras();
-                        Bitmap imageBitmap = (Bitmap) extras.get("data");
+                        imageBitmap = (Bitmap) extras.get("data");
                 }
 
             case UPLOAD_PHOTO:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         Uri selectedImageUri = data.getData();
+//                        InputStream inputStream = context.getContentResolver().openInputStream(data.getData());
                         Bundle extras = data.getExtras();
-                        Bitmap imageBitmap = (Bitmap) extras.get("data");
+//                        imageBitmap = (Bitmap) extras.get("data");
                 }
 
             case CONNECTION_FAILURE_RESOLUTION_REQUEST:
@@ -208,6 +220,24 @@ public class Landing extends ActionBarActivity implements
 
         }
     }
+
+//    public static Bitmap getBitmapFromURL(String src) {
+//        try {
+//            Log.e("src",src);
+//            URL url = new URL(src);
+//            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+//            connection.setDoInput(true);
+//            connection.connect();
+//            InputStream input = connection.getInputStream();
+//            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+//            Log.e("Bitmap","returned");
+//            return myBitmap;
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            Log.e("Exception",e.getMessage());
+//            return null;
+//        }
+//    }
 
     protected void loadMap(GoogleMap googleMap) {
         map = googleMap;
