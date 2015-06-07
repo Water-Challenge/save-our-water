@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,7 +16,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,6 +37,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Landing extends ActionBarActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -46,6 +52,7 @@ public class Landing extends ActionBarActivity implements
     private LocationRequest mLocationRequest;
     private long UPDATE_INTERVAL = 60000;  /* 60 secs */
     private long FASTEST_INTERVAL = 5000; /* 5 secs */
+    private int mapHeight;
 
     /*
 	 * Define a request code to send to Google Play services This code is
@@ -85,8 +92,18 @@ public class Landing extends ActionBarActivity implements
         } else {
             Toast.makeText(this, "Error - Map Fragment was null!!", Toast.LENGTH_SHORT).show();
         }
+
+        final View vInvisible = findViewById(R.id.vInvisible);
+        ViewTreeObserver vto = vInvisible.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+              @Override
+              public void onGlobalLayout() {
+                  mapHeight = vInvisible.getHeight();
+              }
+        });
+
     }
-    
+
     private void setUpMap() {
         map.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
 
@@ -98,27 +115,18 @@ public class Landing extends ActionBarActivity implements
 
             // Defines the contents of the InfoWindow
             @Override
-            public View getInfoContents(Marker arg0) {
-
-                Log.d(TAG, "in getInfoContents");
-
+            public View getInfoContents(Marker marker) {
                 // Getting view from the layout file info_window_layout
                 View v = getLayoutInflater().inflate(R.layout.windowlayout, null);
 
-                // Getting the position from the marker
-                LatLng latLng = arg0.getPosition();
-
                 // Getting reference to the TextView to set latitude
-                TextView tvLat = (TextView) v.findViewById(R.id.tv_lat);
-
-                // Getting reference to the TextView to set longitude
-                TextView tvLng = (TextView) v.findViewById(R.id.tv_lng);
+                TextView tvLat = (TextView) v.findViewById(R.id.tvDescription);
 
                 // Setting the latitude
-                tvLat.setText("Latitude:" + latLng.latitude);
+                tvLat.setText(marker.getSnippet());
 
-                // Setting the longitude
-                tvLng.setText("Longitude:"+ latLng.longitude);
+                ImageView ivPhoto = (ImageView) v.findViewById(R.id.ivPhoto);
+                ivPhoto.setImageResource(photos.get(marker.getId()));
 
                 // Returning the view containing InfoWindow contents
                 return v;
@@ -129,10 +137,11 @@ public class Landing extends ActionBarActivity implements
         map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                Log.d(TAG, "in onMarkerClick");
-               // map.clear();
                 marker.showInfoWindow();
-                return false;
+                Point mapPoint = map.getProjection().toScreenLocation(marker.getPosition());
+                mapPoint.set(mapPoint.x, mapPoint.y - (mapHeight/3));
+                map.animateCamera(CameraUpdateFactory.newLatLng(map.getProjection().fromScreenLocation(mapPoint)), 300, null);
+                return true;
             }
         });
 /*
@@ -213,7 +222,7 @@ public class Landing extends ActionBarActivity implements
         map = googleMap;
         if (map != null) {
             // Map is ready
-            Toast.makeText(this, "Map Fragment was loaded properly!", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(this, "Map Fragment was loaded properly!", Toast.LENGTH_SHORT).show();
             map.setMyLocationEnabled(true);
 
             // Now that map has loaded, let's get our location!
@@ -295,7 +304,7 @@ public class Landing extends ActionBarActivity implements
         // Display the connection status
         Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (location != null) {
-            Toast.makeText(this, "GPS location was found!", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(this, "GPS location was found!", Toast.LENGTH_SHORT).show();
             LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17);
             map.animateCamera(cameraUpdate);
@@ -320,7 +329,7 @@ public class Landing extends ActionBarActivity implements
         String msg = "Updated Location: " +
                 Double.toString(location.getLatitude()) + "," +
                 Double.toString(location.getLongitude());
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+       // Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 
     }
 
@@ -405,9 +414,12 @@ public class Landing extends ActionBarActivity implements
         options.position(currentLatLng);
         Marker mapMarker = map.addMarker(options);
         mapMarker.setTitle("Test test test");
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng,
-                13));
+        mapMarker.setSnippet("Broken pipe leaking into street.");
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15));
+
+        photos.put("m0", R.mipmap.ic_broken_pipe);
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -430,4 +442,6 @@ public class Landing extends ActionBarActivity implements
 
         return super.onOptionsItemSelected(item);
     }
+
+    private static final Map<String, Integer> photos = new HashMap<>();
 }
